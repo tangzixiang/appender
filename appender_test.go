@@ -1,0 +1,99 @@
+package appender
+
+import (
+	"fmt"
+)
+
+type TODOList struct {
+	Handler
+}
+
+type TODO struct {
+	name string
+}
+
+func ExampleTODOListAppend() {
+	list := TODOList{}
+	list.Append() // not panic
+	fmt.Printf("%+v\n", list.Values())
+
+	list2 := TODOList{}
+	list2.Append(TODO{"step 1"}, TODO{"step 2"}, TODO{"step 3"})
+	fmt.Printf("%+v\n", list2.Values())
+
+	// Output:
+	// []
+	// [{name:step 1} {name:step 2} {name:step 3}]
+}
+
+func ExampleTODOListAppendIf() {
+	list := TODOList{}
+	list.AppendIf(true)(TODO{"step 1"})
+	list.AppendIf(false)(TODO{"step 2"})
+	list.AppendIf(true)(TODO{"step 3"})
+	fmt.Printf("%+v\n", list.Values())
+
+	// Output:[{name:step 1} {name:step 3}]
+}
+
+func ExampleTODOListAppendWhen() {
+	list := TODOList{}
+
+	// append success
+	list.AppendWhen(func(list, appendData []interface{}, arguments ...interface{}) bool {
+		compStr := arguments[0].(string)
+
+		for _, d := range appendData {
+			if compStr == d.(TODO).name {
+				return false
+			}
+		}
+
+		return true
+	}, "step 4")(TODO{"step 1"}, TODO{"step 2"}, TODO{"step 3"})
+	fmt.Printf("%+v\n", list.Values())
+
+	// append failed
+	list.AppendWhen(func(list, appendData []interface{}, arguments ...interface{}) bool {
+		if !arguments[0].(bool) {
+			return false
+		}
+
+		return true
+	}, false)(TODO{"step 4"}, TODO{"step 5"}, TODO{"step 6"})
+	fmt.Printf("%+v\n", list.Values())
+
+	// append success
+	list.AppendWhen(func(list, appendData []interface{}, arguments ...interface{}) bool {
+		if !arguments[0].(bool) {
+			return false
+		}
+
+		return true
+	}, true)(TODO{"step 7"}, TODO{"step 8"}, TODO{"step 9"})
+	fmt.Printf("%+v\n", list.Values())
+
+	// Output:
+	// [{name:step 1} {name:step 2} {name:step 3}]
+	// [{name:step 1} {name:step 2} {name:step 3}]
+	// [{name:step 1} {name:step 2} {name:step 3} {name:step 7} {name:step 8} {name:step 9}]
+}
+
+func ExampleTODOListAppendFrom() {
+	list := TODOList{}
+
+	list.AppendFrom(func(list []interface{}, arguments ...interface{}) []interface{} {
+		length := arguments[0].(int)
+		ret := make([]interface{}, length)
+
+		for i := 1; i <= length; i++ {
+			ret[i-1] = TODO{fmt.Sprintf("step %v", i)}
+		}
+
+		return ret
+	}, 2)
+
+	fmt.Printf("%+v\n", list.Values())
+
+	// Output:  [{name:step 1} {name:step 2}]
+}
