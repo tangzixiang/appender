@@ -1,4 +1,4 @@
-# Title
+# appender
 
 appender let you struct convenient append data 
 
@@ -68,21 +68,21 @@ maybe you can use a callback to decide whether to append use AppendWhen
 // append is [{name:step 3} {name:step 4} {name:step 5}]
 // arguments contain a string "step 6"
 when := func(sources,appends []interface{}, arguments ...interface{}) bool {
-		// ensure compStr not in sources or appends item name
-		compStr := arguments[0].(string)
+	// ensure compStr not in sources or appends item name
+	compStr := arguments[0].(string)
 
-		for _, d := range sources {
-			if compStr == d.(TODO).name {
-				return false
-			}
+	for _, d := range sources {
+		if compStr == d.(TODO).name {
+			return false
 		}
+	}
 
-		for _, d := range appends {
-			if compStr == d.(TODO).name {
-				return false
-			}
+	for _, d := range appends {
+		if compStr == d.(TODO).name {
+			return false
 		}
-    
+	}
+
     return true 
 }
 
