@@ -37,52 +37,51 @@ func ExampleTODOListAppendIf() {
 }
 
 func ExampleTODOListAppendWhen() {
-	list := TODOList{}
-
-	// append success
-	list.AppendWhen(func(list, appendData []interface{}, arguments ...interface{}) bool {
+	when := func(sources, appends []interface{}, arguments ...interface{}) bool {
+		// ensure compStr not in sources or appends item name
 		compStr := arguments[0].(string)
 
-		for _, d := range appendData {
+		for _, d := range sources {
+			if compStr == d.(TODO).name {
+				return false
+			}
+		}
+
+		for _, d := range appends {
 			if compStr == d.(TODO).name {
 				return false
 			}
 		}
 
 		return true
-	}, "step 4")(TODO{"step 1"}, TODO{"step 2"}, TODO{"step 3"})
+	}
+
+	// source is empty list
+	// appends is [ {name:step 2} {name:step 3}]
+	// both source and appends not contain a item name is "step 1" so append success
+	list := new(TODOList).AppendWhen(when, "step 1")(TODO{"step 2"}, TODO{"step 3"})
 	fmt.Printf("%+v\n", list.Values())
 
-	// append failed
-	list.AppendWhen(func(list, appendData []interface{}, arguments ...interface{}) bool {
-		if !arguments[0].(bool) {
-			return false
-		}
+	// source is empty list
+	// appends is [ {name:step 4} {name:step 5} {name:step 6}]
+	// appends contain a item name is "step 4" so append failed
+	list2 := new(TODOList).AppendWhen(when, "step 4")(TODO{"step 4"}, TODO{"step 5"}, TODO{"step 6"})
+	fmt.Printf("%+v\n", list2.Values())
 
-		return true
-	}, false)(TODO{"step 4"}, TODO{"step 5"}, TODO{"step 6"})
-	fmt.Printf("%+v\n", list.Values())
-
-	// append success
-	list.AppendWhen(func(list, appendData []interface{}, arguments ...interface{}) bool {
-		if !arguments[0].(bool) {
-			return false
-		}
-
-		return true
-	}, true)(TODO{"step 7"}, TODO{"step 8"}, TODO{"step 9"})
+	// source is [ {name:step 2} {name:step 3}]
+	// appends is  [ {name:step 4} {name:step 5}]
+	// both source and appends not contain a item name is "step 1" so append success
+	list.AppendWhen(when, "step 1")(TODO{"step 4"}, TODO{"step 5"})
 	fmt.Printf("%+v\n", list.Values())
 
 	// Output:
-	// [{name:step 1} {name:step 2} {name:step 3}]
-	// [{name:step 1} {name:step 2} {name:step 3}]
-	// [{name:step 1} {name:step 2} {name:step 3} {name:step 7} {name:step 8} {name:step 9}]
+	// [{name:step 2} {name:step 3}]
+	// []
+	// [{name:step 2} {name:step 3} {name:step 4} {name:step 5}]
 }
 
 func ExampleTODOListAppendFrom() {
-	list := TODOList{}
-
-	list.AppendFrom(func(list []interface{}, arguments ...interface{}) []interface{} {
+	list := (&TODOList{}).AppendFrom(func(sources []interface{}, arguments ...interface{}) []interface{} {
 		length := arguments[0].(int)
 		ret := make([]interface{}, length)
 
@@ -94,6 +93,5 @@ func ExampleTODOListAppendFrom() {
 	}, 2)
 
 	fmt.Printf("%+v\n", list.Values())
-
 	// Output:  [{name:step 1} {name:step 2}]
 }
