@@ -43,6 +43,7 @@ fmt.Printf("%+v\n", (&TODOList{}).Append(TODO{"step 1"}, TODO{"step 2"}).Values(
 or append data when you sure
 
 ```go
+// base list contain "step 1" and "step 2"
 list := (&TODOList{}).Append(TODO{"step 1"}, TODO{"step 2"}) 
 
 // append when you sure
@@ -50,7 +51,7 @@ fmt.Printf("%+v\n", list.AppendIf(true)(TODO{"step 3"}).Values())
 // Output: [{name:step 1} {name:step 2} {name:step 3}]
 ```
 
-not use appender to implment above mybe write down：
+not use appender mybe write down：
 
 ```go
 var list []interface{}{TODO{"step 1"}, TODO{"step 2"}}
@@ -64,11 +65,13 @@ if(verb){
 maybe you can use a callback to decide whether to append use AppendWhen
 
 ```go
-// sources is a empty slice here
-// append is [{name:step 3} {name:step 4} {name:step 5}]
-// arguments contain a string "step 6"
+// when this callback use with AppendWhen below
+// sources is [{name:step 1} {name:step 2}]
+// appends is [{name:step 3} {name:step 4} {name:step 5}]
+// arguments contain a string "step 6" 
 when := func(sources,appends []interface{}, arguments ...interface{}) bool {
-	// ensure compStr not in sources or appends item name
+	// ensure compStr not in sources or appends item name 
+	// compStr will be "step 6" here
 	compStr := arguments[0].(string)
 
 	for _, d := range sources {
@@ -86,7 +89,7 @@ when := func(sources,appends []interface{}, arguments ...interface{}) bool {
     return true 
 }
 
-// both source and appends not contain "step 6" so step3/4/5 will append success
+// both sources and appends not contain "step 6" so step3/4/5 will append success
 list := (&TODOList{}).Append(TODO{"step 1"}, TODO{"step 2"}).
 AppendWhen(when, "step 6")(TODO{"step 3"}, TODO{"step 4"}, TODO{"step 5"})
 
@@ -94,11 +97,11 @@ fmt.Printf("%+v\n", list.Values())
 // Output: [{name:step 1} {name:step 2} {name:step 3} {name:step 4} {name:step 5}]
 ```
 
-or use a  closure to decide  append what
+or use a  closure to decide append what
 
 ```go
 // sources is a empty slice here
-// arguments contain a num which is 2
+// arguments contain a num 2
 (&TODOList{}).AppendFrom(func(sources []interface{}, arguments ...interface{}) []interface{} {
     length := arguments[0].(int)
     ret := make([]interface{}, length)
